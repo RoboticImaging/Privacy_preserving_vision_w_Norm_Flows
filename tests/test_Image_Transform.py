@@ -25,17 +25,17 @@ class TestImageTransformCrop(unittest.TestCase):
         self.assertEqual(crop.shape, (52,52,3))
 
     def test_image_subset(self):
-        img = np.array([[1,2,3],
-                        [4,5,6],
-                        [7,8,9]])
-        img = np.repeat(img[:, :, np.newaxis], 3, axis=2)
-        print(img)
+        # img = np.array([[1,2,3],
+        #                 [4,5,6],
+        #                 [7,8,9]])
+        img = np.array([[1,2],
+                        [4,5]])
+        img = np.stack([img,img,img],axis=2)
         crop = Image_Transform.centre_crop(img)
-        self.assertEqual(crop, img)
+        self.assert_(np.array_equal(crop, img))
 
 
 
 
 if __name__ == '__main__':
-    # unittest.main()
-    TestImageTransformCrop.test_image_subset()
+    unittest.main()
