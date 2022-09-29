@@ -32,7 +32,38 @@ class TestImageTransformCrop(unittest.TestCase):
                         [4,5]])
         img = np.stack([img,img,img],axis=2)
         crop = Image_Transform.centre_crop(img)
-        self.assert_(np.array_equal(crop, img))
+        np.testing.assert_array_equal(crop, img)
+
+        
+        img = np.array([[1,2,3,4],
+                        [5,6,7,8]])
+        target = np.array([[2,3],
+                           [6,7]])
+        img = np.stack([img,img,img],axis=2)
+        target = np.stack([target,target,target],axis=2)
+        crop = Image_Transform.centre_crop(img)
+        np.testing.assert_array_equal(crop, target)
+
+        
+        img = np.array([[1,2,3,4],
+                        [5,6,7,8],
+                        [9,10,11,12]])
+        target = np.array([[2,3],
+                           [6,7]])
+        img = np.stack([img,img,img],axis=2)
+        target = np.stack([target,target,target],axis=2)
+        crop = Image_Transform.centre_crop(img)
+        np.testing.assert_array_equal(crop, target)
+        
+        img = np.array([[1,2,3],
+                        [5,6,7],
+                        [9,10,11]])
+        target = np.array([[1,2],
+                           [5,6]])
+        img = np.stack([img,img,img],axis=2)
+        target = np.stack([target,target,target],axis=2)
+        crop = Image_Transform.centre_crop(img)
+        np.testing.assert_array_equal(crop, target)
 
 
 
