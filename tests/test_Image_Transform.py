@@ -66,7 +66,25 @@ class TestImageTransformCrop(unittest.TestCase):
         np.testing.assert_array_equal(crop, target)
 
 
-
+class TestImageTransformCenter(unittest.TestCase):
+    def test_output_size(self):
+        img = np.array([[1,2],
+                        [4,5]])
+        img = np.stack([img,img,img],axis=2)
+        c = Image_Transform.calc_img_center(img)
+        np.testing.assert_array_equal(c, (1,1))
+        
+        img = np.array([[1,2,3],
+                        [4,5,6]])
+        img = np.stack([img,img,img],axis=2)
+        c = Image_Transform.calc_img_center(img)
+        np.testing.assert_array_equal(c, (1,1))
+        
+        img = np.array([[1,2,3,4],
+                        [4,5,6,7]])
+        img = np.stack([img,img,img],axis=2)
+        c = Image_Transform.calc_img_center(img)
+        np.testing.assert_array_equal(c, (1,2))
 
 if __name__ == '__main__':
     unittest.main()
