@@ -12,6 +12,9 @@ class Image_Transform:
     
     def calc_img_center(img):
         return np.array(img.shape[:2])//2
+    
+    def color2monochrome(img):
+        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
 
