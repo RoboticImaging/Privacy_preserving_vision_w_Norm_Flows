@@ -1,0 +1,10 @@
+data
+outputs
+*.pdf
+*.svg
+*.jpg
+*.png
+*.webp
+.vscode
+
+*__pycache__
