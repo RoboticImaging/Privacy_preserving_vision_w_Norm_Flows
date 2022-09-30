@@ -86,5 +86,15 @@ class TestImageTransformCenter(unittest.TestCase):
         c = Image_Transform.calc_img_center(img)
         np.testing.assert_array_equal(c, (1,2))
 
+
+class TestImageTransformMonochrome(unittest.TestCase):
+    def test_output(self):
+        img = np.array([[1,2,3,4],
+                        [4,5,6,7]], dtype=np.uint8)
+        imgStack = np.stack([img,img,img],axis=2)
+        output = Image_Transform.color2monochrome(imgStack)
+        np.testing.assert_array_equal(output, img)
+
+
 if __name__ == '__main__':
     unittest.main()
