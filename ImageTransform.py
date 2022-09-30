@@ -16,6 +16,9 @@ class Image_Transform:
     
     def color2monochrome(img):
         return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    
+    def resize(img, new_size):
+        return cv2.resize(img, new_size)
 
 
 
@@ -26,16 +29,12 @@ if __name__ == "__main__":
 
     img = np.array(cv2.imread(fname))
     crop = Image_Transform.centre_crop(img)
-    print(crop.dtype)
     mono = Image_Transform.color2monochrome(crop)
-    print(mono.shape)
+    downsize = Image_Transform.resize(mono,[64,64])
 
     cv2.imwrite(output+"original.png", img)
     cv2.imwrite(output+"center.png", crop)
 
     cv2.imwrite(output+"mono.png", mono)
 
-    img = np.array([[1,2,3,4],
-                    [4,5,6,7]], dtype=np.uint8)
-    imgStack = np.stack([img,img,img],axis=2)
-    mono = Image_Transform.color2monochrome(imgStack)
+    cv2.imwrite(output+"downsize.png", downsize)
