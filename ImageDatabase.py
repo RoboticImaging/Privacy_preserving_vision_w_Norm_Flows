@@ -9,6 +9,8 @@ class Image_Database:
     # reads images recursively 
     def __init__(self, input_path, output_path):
         assert(os.path.exists(input_path))
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
 
         self.imgIdx = 0
         self.input_path = input_path
@@ -23,14 +25,17 @@ class Image_Database:
                     img = transform(img)
                 cv2.imwrite(os.path.join(self.output_path, f"{imgIdx}.{output_ftype}"), img)
                 imgIdx += 1
+
+                if imgIdx % 1e4 == 0:
+                    print(f"Transformed {imgIdx} images")
                 
 
 
 
 if __name__ == "__main__":
-    id = Image_Database('data\Extracted', 'outputs/LSUN/64x64')
+    id = Image_Database('data\Extracted', 'outputs/LSUN_Bedroom/16x16')
 
-    new_size = 64
+    new_size = 16
 
     id.transform_and_save([
         Image_Transform.centre_crop,
