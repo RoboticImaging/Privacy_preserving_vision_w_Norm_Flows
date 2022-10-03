@@ -33,7 +33,7 @@ class Image_Database:
 
 
 if __name__ == "__main__":
-    id = Image_Database('data\Extracted', 'outputs/LSUN_Bedroom/16x16')
+    id = Image_Database('../data/Extracted', '../outputs/LSUN_Bedroom/16x16')
 
     new_size = 16
 
