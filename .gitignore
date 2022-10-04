@@ -1,6 +1,7 @@
 data
 data_cleaned
 outputs
+saved_models
 *.pdf
 *.svg
 *.jpg

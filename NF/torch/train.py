@@ -1,37 +1,40 @@
 
 from layers import *
+from ImageFlow import ImageFlow
+import torchvision
+from torchvision import transforms
 
-
-def create_multiscale_flow():
+def create_multiscale_flow(train_set, height, width):
     flow_layers = []
     
-    vardeq_layers = [CouplingLayer(network=GatedConvNet(c_out=2, c_hidden=16),
-                                   mask=create_checkerboard_mask(h=28, w=28, invert=(i%2==1)),
+    vardeq_layers = [CouplingLayer(network=GatedConvNet(c_in=2, c_out=2, c_hidden=16),
+                                   mask=create_checkerboard_mask(h=height, w=width, invert=(i%2==1)),
                                    c_in=1) for i in range(4)]
-    flow_layers += [VariationalDequantization(var_flows=vardeq_layers)]
+    flow_layers += [VariationalDequantization(vardeq_layers)]
     
-    flow_layers += [CouplingLayer(network=GatedConvNet(c_out=2, c_hidden=32),
-                                  mask=create_checkerboard_mask(h=28, w=28, invert=(i%2==1)),
+    flow_layers += [CouplingLayer(network=GatedConvNet(c_in=1, c_hidden=32),
+                                  mask=create_checkerboard_mask(h=height, w=width, invert=(i%2==1)),
                                   c_in=1) for i in range(2)]
     flow_layers += [SqueezeFlow()]
     for i in range(2):
-        flow_layers += [CouplingLayer(network=GatedConvNet(c_out=8, c_hidden=48),
+        flow_layers += [CouplingLayer(network=GatedConvNet(c_in=4, c_hidden=48),
                                       mask=create_channel_mask(c_in=4, invert=(i%2==1)),
                                       c_in=4)]
     flow_layers += [SplitFlow(),
                     SqueezeFlow()]
     for i in range(4):
-        flow_layers += [CouplingLayer(network=GatedConvNet(c_out=16, c_hidden=64),
+        flow_layers += [CouplingLayer(network=GatedConvNet(c_in=8, c_hidden=64),
                                       mask=create_channel_mask(c_in=8, invert=(i%2==1)),
                                       c_in=8)]
 
-    flow_model = ImageFlow(flow_layers)
+    device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+    flow_model = ImageFlow(flow_layers, train_set).to(device)
     return flow_model
 
 
 
 
-def train_flow(flow, train_set, model_name="MNISTFlow", n_epochs=200):
+def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=200):
     # Create a PyTorch Lightning trainer
     trainer = pl.Trainer(default_root_dir=os.path.join(CHECKPOINT_PATH, model_name), 
                          gpus=1 if torch.cuda.is_available() else 0, 
@@ -44,6 +47,7 @@ def train_flow(flow, train_set, model_name="MNISTFlow", n_epochs=200):
     trainer.logger._default_hp_metric = None # Optional logging argument that we don't need
     
     train_data_loader = data.DataLoader(train_set, batch_size=128, shuffle=True, drop_last=True, pin_memory=True, num_workers=8)
+    val_loader = data.DataLoader(val_set, batch_size=64, shuffle=False, drop_last=False, num_workers=4)
     result = None
     
     # Check whether pretrained model exists. If yes, load it and skip training
@@ -69,8 +73,14 @@ def train_flow(flow, train_set, model_name="MNISTFlow", n_epochs=200):
     return flow, result
 
 
+# Convert images from 0-1 to 0-255 (integers)
+def discretize(sample):
+    return (sample * 255).to(torch.int32)
 
 if __name__ == "__main__":
+
+    DATASET_PATH = "data/LSUN_Bedroom/16x16"
+    CHECKPOINT_PATH = "saved_models/bedroom_flows/16x16/"
 
     overall_transform =  torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
                                                      transforms.ToTensor(),
@@ -87,4 +97,5 @@ if __name__ == "__main__":
                                                     generator=torch.Generator().manual_seed(42))
 
 
-    model, result = train_flow(create_multiscale_flow(), train_set, model_name="bedroomFlow_multiscale")
+    img_size = [16,16]
+    model, result = train_flow(create_multiscale_flow(train_set, img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale")

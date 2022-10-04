@@ -12,7 +12,7 @@ class ImageFlow(pl.LightningModule):
     # A class to make normalising flows for image generation
     # Create by passing a list of flow layers
 
-    def __init__(self, flows, import_samples=8):
+    def __init__(self, flows, train_set, import_samples=8):
         """
         Inputs:
             flows - A list of flows (each a nn.Module) that should be applied on the images.
