@@ -34,7 +34,7 @@ def create_multiscale_flow(train_set, height, width):
 
 
 
-def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=200):
+def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=100):
     # Create a PyTorch Lightning trainer
     trainer = pl.Trainer(default_root_dir=os.path.join(CHECKPOINT_PATH, model_name), 
                          gpus=1 if torch.cuda.is_available() else 0, 
@@ -79,8 +79,8 @@ def discretize(sample):
 
 if __name__ == "__main__":
 
-    DATASET_PATH = "data/LSUN_Bedroom/16x16"
-    CHECKPOINT_PATH = "saved_models/bedroom_flows/16x16/"
+    DATASET_PATH = "data/LSUN_Bedroom/32x32"
+    CHECKPOINT_PATH = "saved_models/bedroom_flows/32x32/"
 
     overall_transform =  torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
                                                      transforms.ToTensor(),
@@ -97,5 +97,5 @@ if __name__ == "__main__":
                                                     generator=torch.Generator().manual_seed(42))
 
 
-    img_size = [16,16]
+    img_size = [32,32]
     model, result = train_flow(create_multiscale_flow(train_set, img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale")
