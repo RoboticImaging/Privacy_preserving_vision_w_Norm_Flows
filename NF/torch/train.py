@@ -34,7 +34,23 @@ def create_multiscale_flow(train_set, height, width):
 
 
 
-def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=100):
+def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=100, from_version=None):
+    extra_args = {}
+    if from_version is not None:
+        if from_version == -1:
+            # use latest version
+            version_list = os.listdir(os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs'))
+
+            version_list.sort(key = lambda x: int(x.split('_')[-1]))
+
+            ckpt_name = os.listdir(os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs',version_list[-1],'checkpoints'))[0]
+            ckpt_path = os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs',version_list[-1],'checkpoints', ckpt_name)
+        else:
+            # use version indicated
+            raise NotImplementedError
+
+        extra_args = {"resume_from_checkpoint": ckpt_path}
+        
     # Create a PyTorch Lightning trainer
     trainer = pl.Trainer(default_root_dir=os.path.join(CHECKPOINT_PATH, model_name), 
                          gpus=1 if torch.cuda.is_available() else 0, 
@@ -42,7 +58,8 @@ def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=100):
                          gradient_clip_val=1.0,
                          callbacks=[ModelCheckpoint(save_weights_only=False, mode="min", monitor="val_bpd"),
                                     LearningRateMonitor("epoch")],
-                         check_val_every_n_epoch=5)
+                         check_val_every_n_epoch=5,
+                         **extra_args)
     trainer.logger._log_graph = True
     trainer.logger._default_hp_metric = None # Optional logging argument that we don't need
     
@@ -98,4 +115,4 @@ if __name__ == "__main__":
 
 
     img_size = [32,32]
-    model, result = train_flow(create_multiscale_flow(train_set, img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale")
+    model, result = train_flow(create_multiscale_flow(train_set, img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale", from_version=-1)
