@@ -22,6 +22,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
 ###### STANDARD LAYERS ##########
+device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
 
 class CouplingLayer(nn.Module):
     
