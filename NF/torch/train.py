@@ -115,4 +115,4 @@ if __name__ == "__main__":
 
 
     img_size = [32,32]
-    model, result = train_flow(create_multiscale_flow(train_set, img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale", from_version=-1)
+    model, result = train_flow(create_multiscale_flow(img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale", from_version=-1)
