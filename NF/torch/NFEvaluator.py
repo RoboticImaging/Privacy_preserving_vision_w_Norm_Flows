@@ -1,8 +1,23 @@
-
+import os
+from train import create_multiscale_flow
+import torch
 
 class NFEvaluator:
-    def __init__(self, model):
-        pass
+    def __init__(self, n_pix, model_name, train_loader, 
+                    ckpt_pth = 'saved_models/bedroom_flows/32x32/', 
+                    save_pth='outputs'):
+        # load the model 
+        self.model = self._read_model(model_name, ckpt_pth, n_pix)
+        
+        # setup figure saving path
+
+        # get example images
+        self.exmp_imgs, _ = next(iter(train_loader))
+
+
+    def run_all_eval(self):
+        self.get_results()
+        # etc. etc.
 
     def get_results(self):
         # compute results as in UvA tute
@@ -26,6 +41,16 @@ class NFEvaluator:
     
     def hist_of_training_imgs(self):
         pass
+
+    def _read_model(self, model_name, ckpt_path, n_pix):
+        flow = create_multiscale_flow(n_pix,n_pix)
+        device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+        pretrained_filename = os.path.join(ckpt_path, model_name,"model.ckpt")
+        if os.path.isfile(pretrained_filename):
+            print("Found pretrained model, loading...")
+            ckpt = torch.load(pretrained_filename, map_location=device)
+            flow.load_state_dict(ckpt['state_dict'])
+        return flow
 
     def show_imgs(imgs, title=None, row_size=4):
         # Form a grid of pictures (we use max. 8 columns)
