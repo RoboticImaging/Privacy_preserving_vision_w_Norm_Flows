@@ -27,3 +27,4 @@ if __name__ == "__main__":
  
     n_pix = 32
     eval = NFEvaluator(n_pix, 'bedroomFlow_multiscale', train_loader)
+    eval.standard_interp()

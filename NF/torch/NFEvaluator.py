@@ -1,15 +1,23 @@
 import os
 from train import create_multiscale_flow
 import torch
+import math
+import torchvision
+import matplotlib.pyplot as plt
+import numpy as np
 
 class NFEvaluator:
     def __init__(self, n_pix, model_name, train_loader, 
-                    ckpt_pth = 'saved_models/bedroom_flows/32x32/', 
+                    ckpt_pth = 'saved_models/bedroom_flows/', 
                     save_pth='outputs'):
         # load the model 
+        ckpt_pth = os.path.join(ckpt_pth, f'{n_pix}x{n_pix}')
         self.model = self._read_model(model_name, ckpt_pth, n_pix)
         
         # setup figure saving path
+        self.output_save_path = os.path.join(save_pth, f'{n_pix}x{n_pix}', model_name)
+        if not os.path.exists(self.output_save_path):
+            os.mkdir(self.output_save_path)
 
         # get example images
         self.exmp_imgs, _ = next(iter(train_loader))
@@ -23,9 +31,14 @@ class NFEvaluator:
         # compute results as in UvA tute
         pass
     
-    def standard_interp(self, save=False):
+    def standard_interp(self, save=True):
         # interp between some samples 
-        pass
+        n_step = 8
+        for i in range(2):
+            interp_imgs = self._interpolate(self.exmp_imgs[2*i], self.exmp_imgs[2*i+1], n_step)
+            NFEvaluator._show_imgs(interp_imgs)
+            if save:
+                plt.savefig(os.path.join(self.output_save_path, f"standard_interp_{i}.png"))
 
     def interp_inside_out(self, save=False):
         # interp out from mean to some fixed distance out through training data
@@ -52,7 +65,21 @@ class NFEvaluator:
             flow.load_state_dict(ckpt['state_dict'])
         return flow
 
-    def show_imgs(imgs, title=None, row_size=4):
+    @torch.no_grad()
+    def _interpolate(self, img1, img2, num_steps=8):
+        """
+        Inputs:
+            img1, img2 - Image tensors of shape [1, 28, 28]. Images between which should be interpolated.
+            num_steps - Number of interpolation steps. 8 interpolation steps mean 6 intermediate pictures besides img1 and img2
+        """
+        imgs = torch.stack([img1, img2], dim=0).to(self.model.device)
+        z, _ = self.model.encode(imgs)
+        alpha = torch.linspace(0, 1, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
+        interpolations = z[0:1] * alpha + z[1:2] * (1 - alpha)
+        interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
+        return interp_imgs
+
+    def _show_imgs(imgs, title=None, row_size=8):
         # Form a grid of pictures (we use max. 8 columns)
         num_imgs = imgs.shape[0] if isinstance(imgs, torch.Tensor) else len(imgs)
         is_int = imgs.dtype==torch.int32 if isinstance(imgs, torch.Tensor) else imgs[0].dtype==torch.int32
