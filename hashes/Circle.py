@@ -10,4 +10,9 @@ class Circle:
         theta = np.linspace(0, 2*np.pi, n_samp+1)[0:-1]
         x = self.centre[0] + self.radius*np.cos(theta)
         y = self.centre[1] + self.radius*np.sin(theta)
-        return np.concatenate([x,y])
+        return np.concatenate([[x],[y]]).T
+
+
+if __name__ == "__main__":
+    c = Circle(np.array([0,0]),1.)
+    print(c.get_xy_samples(5))
