@@ -3,6 +3,7 @@ import numpy as np
 
 class Circle:
     def __init__(self, centre, radius):
+        assert(centre.size == 2)
         self.centre = centre
         self.radius = radius
 
@@ -11,6 +12,9 @@ class Circle:
         x = self.centre[0] + self.radius*np.cos(theta)
         y = self.centre[1] + self.radius*np.sin(theta)
         return np.concatenate([[x],[y]]).T
+    
+    def __str__(self):
+        return f"Centre: ({self.centre[0]:.2f},{self.centre[1]:.2f}), r= {self.radius:.2f}"
 
 
 if __name__ == "__main__":
