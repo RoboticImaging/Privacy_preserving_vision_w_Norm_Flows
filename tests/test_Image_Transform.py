@@ -1,6 +1,6 @@
 import unittest
 
-from ImageTransform import Image_Transform
+from data_manipulation.ImageTransform import Image_Transform
 import numpy as np
 
 class TestImageTransformCrop(unittest.TestCase):

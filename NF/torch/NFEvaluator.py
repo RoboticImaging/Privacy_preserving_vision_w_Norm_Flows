@@ -11,6 +11,7 @@ class NFEvaluator:
                     ckpt_pth = 'saved_models/bedroom_flows/', 
                     save_pth='outputs'):
         # load the model 
+        self.n_pix = n_pix
         ckpt_pth = os.path.join(ckpt_pth, f'{n_pix}x{n_pix}')
         self.model = self._read_model(model_name, ckpt_pth, n_pix)
         
@@ -48,9 +49,10 @@ class NFEvaluator:
         # pick a random direction and interp out from it for a fixed distance
         pass
     
-    def show_random_samples(self):
+    def show_random_samples(self, n_imgs = 16):
         # create some images from the model
-        pass
+        samples = self.model.sample(img_shape=[n_imgs,8,self.n_pix/4,self.n_pix/4])
+        NFEvaluator._show_imgs(samples.cpu())
     
     def hist_of_training_imgs(self):
         pass

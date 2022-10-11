@@ -8,7 +8,8 @@ import numpy as np
 
 
 if __name__ == "__main__":
-    DATASET_PATH = "data/LSUN_Bedroom/32x32"
+    n_pix = 32
+    DATASET_PATH = f"data/LSUN_Bedroom/{n_pix}x{n_pix}"
 
     overall_transform =  torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
                                                      transforms.ToTensor(),
@@ -25,6 +26,5 @@ if __name__ == "__main__":
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=256, shuffle=False, drop_last=False)
  
-    n_pix = 32
     eval = NFEvaluator(n_pix, 'bedroomFlow_multiscale', train_loader)
     eval.standard_interp()
