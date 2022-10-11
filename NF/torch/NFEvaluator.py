@@ -55,6 +55,12 @@ class NFEvaluator:
     def hist_of_training_imgs(self):
         pass
 
+    def dist_of_random_noise(self):
+        pass
+    
+    def dist_of_image_inverted(self):
+        pass
+
     def _read_model(self, model_name, ckpt_path, n_pix):
         flow = create_multiscale_flow(n_pix,n_pix)
         device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
