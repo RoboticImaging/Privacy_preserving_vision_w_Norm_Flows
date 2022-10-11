@@ -4,7 +4,7 @@ from ImageFlow import ImageFlow
 import torchvision
 from torchvision import transforms
 
-def create_multiscale_flow(train_set, height, width):
+def create_multiscale_flow(height, width):
     flow_layers = []
     
     vardeq_layers = [CouplingLayer(network=GatedConvNet(c_in=2, c_out=2, c_hidden=16),
@@ -28,7 +28,7 @@ def create_multiscale_flow(train_set, height, width):
                                       c_in=8)]
 
     device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
-    flow_model = ImageFlow(flow_layers, train_set).to(device)
+    flow_model = ImageFlow(flow_layers).to(device)
     return flow_model
 
 
@@ -115,4 +115,4 @@ if __name__ == "__main__":
 
 
     img_size = [32,32]
-    model, result = train_flow(create_multiscale_flow(train_set, img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale", from_version=-1)
+    model, result = train_flow(create_multiscale_flow(img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale", from_version=-1)

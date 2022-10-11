@@ -7,12 +7,13 @@ import torch.optim as optim
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
+device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
 
 class ImageFlow(pl.LightningModule):
     # A class to make normalising flows for image generation
     # Create by passing a list of flow layers
 
-    def __init__(self, flows, train_set, import_samples=8):
+    def __init__(self, flows, import_samples=8):
         """
         Inputs:
             flows - A list of flows (each a nn.Module) that should be applied on the images.
@@ -23,8 +24,6 @@ class ImageFlow(pl.LightningModule):
         self.import_samples = import_samples
         # Create prior distribution for final latent space
         self.prior = torch.distributions.normal.Normal(loc=0.0, scale=1.0)
-        # Example input for visualizing the graph
-        self.example_input_array = train_set[0][0].unsqueeze(dim=0)
 
     def forward(self, imgs):
         # The forward function is only used for visualizing the graph
