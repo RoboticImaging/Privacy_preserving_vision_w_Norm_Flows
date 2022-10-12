@@ -16,18 +16,21 @@ class ImageHash:
     def compute_features(self, img):
         spline_interp = scipy.interpolate.RectBivariateSpline(range(self.img_size[0]),
                                                 range(self.img_size[1]),img,kx=1,ky=1)
+        gridded_interp = scipy.interpolate.RegularGridInterpolator(range(self.img_size[0]), range(self.img_size[1]))                                        
         features = np.zeros([self.n_features,len(self.analog_ops)])
         for i, obj in enumerate(self.objects):
             samp = obj.get_xy_samples(100)
             curve = spline_interp.ev(samp[:,0],samp[:,1])
+            
 
             # apply each analog operation to the interpolated curve
             for op_idx in range(len(self.analog_ops)):
                 features[i,op_idx] = self.analog_ops[op_idx](curve)   
 
+        print("out of bounds",spline_interp.ev(-1,-1))
         return features
 
-    def get_xy_to_sample():
+    def get_xy_to_sample(self):
         raise NotImplementedError()
 
 
@@ -41,7 +44,7 @@ class CircleHash(ImageHash):
     def get_circle_params(self, n_features, r_bnd = [20,50]):
         # given an image shape, return the centre and radii of the circles
         circs = []
-        for feature_idx in range(n_features):
+        for _ in range(n_features):
             circs.append(Circle(np.random.rand(2,)*self.img_size, r_bnd[0] + np.random.rand()*(r_bnd[1]-r_bnd[0])))
         return circs
 
