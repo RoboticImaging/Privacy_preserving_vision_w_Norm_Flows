@@ -6,6 +6,8 @@ import torchvision
 import matplotlib.pyplot as plt
 import numpy as np
 
+device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+
 class NFEvaluator:
     def __init__(self, n_pix, model_name, train_loader, 
                     ckpt_pth = 'saved_models/bedroom_flows/', 
@@ -21,6 +23,7 @@ class NFEvaluator:
             os.mkdir(self.output_save_path)
 
         # get example images
+        self.train_loader = train_loader
         self.exmp_imgs, _ = next(iter(train_loader))
 
 
@@ -32,36 +35,129 @@ class NFEvaluator:
         # compute results as in UvA tute
         pass
     
-    def standard_interp(self, save=True):
+    def standard_interp(self, save=True, n_imgs = 5):
         # interp between some samples 
         n_step = 8
-        for i in range(2):
+        for i in range(n_imgs):
             interp_imgs = self._interpolate(self.exmp_imgs[2*i], self.exmp_imgs[2*i+1], n_step)
             NFEvaluator._show_imgs(interp_imgs)
             if save:
                 plt.savefig(os.path.join(self.output_save_path, f"standard_interp_{i}.png"))
 
-    def interp_inside_out(self, save=False):
+    def interp_inside_out(self, save=True, n_times = 3, num_steps = 15):
         # interp out from mean to some fixed distance out through training data
-        pass
-    
-    def interp_inside_out_rand_dir(self, save=False):
-        # pick a random direction and interp out from it for a fixed distance
-        pass
-    
-    def show_random_samples(self, n_imgs = 16):
-        # create some images from the model
-        samples = self.model.sample(img_shape=[n_imgs,8,self.n_pix/4,self.n_pix/4])
-        NFEvaluator._show_imgs(samples.cpu())
-    
-    def hist_of_training_imgs(self):
-        pass
+        
+        for i in range(n_times):
+            imgs = torch.stack([self.exmp_imgs[i], self.exmp_imgs[i]], dim=0).to(self.model.device)
+            z, _ = self.model.encode(imgs)
 
-    def dist_of_random_noise(self):
-        pass
+            zVals = torch.zeros_like(z)
+            zVals[0,:] = z[1,:]/torch.norm(z[1,:])
+
+            alpha = torch.linspace(0, self.n_pix*2, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
+            interpolations = zVals[0:1] * alpha + zVals[1:2] * (1 - alpha)
+
+            interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
+            NFEvaluator._show_imgs(interp_imgs, row_size=num_steps)
+            if save:
+                plt.savefig(os.path.join(self.output_save_path, f"inside_out_{i}.png"))
+
+    def interp_inside_out_rand_dir(self, save=True, n_times = 3, num_steps = 9):
+        # pick a random direction and interp out from it for a fixed distance
+        for i in range(n_times):
+            imgs = torch.stack([self.exmp_imgs[i], self.exmp_imgs[i]], dim=0).to(self.model.device)
+            z, _ = self.model.encode(imgs)
+
+
+            zVals = torch.zeros_like(z)
+            rand = torch.randn_like(z[1,:])
+            zVals[0,:] = rand/torch.norm(rand)
+
+            alpha = torch.linspace(0, 2*self.n_pix, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
+            interpolations = zVals[0:1] * alpha + zVals[1:2] * (1 - alpha)
+
+            interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
+            NFEvaluator._show_imgs(interp_imgs, row_size=num_steps)
+            if save:
+                plt.savefig(os.path.join(self.output_save_path, f"inside_out_rand_{i}.png"))
     
-    def dist_of_image_inverted(self):
-        pass
+    def show_random_samples(self, n_imgs = 16, save=True):
+        # create some images from the model
+        samples = self.model.sample(img_shape=[n_imgs, 8,self.n_pix//4,self.n_pix//4])
+        NFEvaluator._show_imgs(samples.cpu())
+        if save:
+            plt.savefig(os.path.join(self.output_save_path, f"random_sample.png"))
+    
+    def hist_of_training_imgs(self, save=True, hundreds_of_imgs=2):
+        # the histogram of the distance from the origin of the training images
+        im_stack = []
+        for i in range (hundreds_of_imgs):
+            exmp_imgs, _ = next(iter(self.train_loader))
+            im_stack += [*exmp_imgs[0:100]]
+
+            imgs = torch.Tensor(np.stack(im_stack, axis=0)).to(device)
+            zz, _ = self.model.encode(imgs)
+            if i == 0:
+                z = zz
+            else:
+                z = torch.cat([z,zz], dim=0)
+
+
+        dists = NFEvaluator._get_images_distance(z)
+
+        fig = plt.figure()
+        fig.patch.set_facecolor('w')
+        plt.hist(dists)
+        plt.ylabel('Count')
+        plt.xlabel('Distance from origin')
+        plt.title('Encoding the training images to gaussian space')
+        if save:
+            plt.savefig(os.path.join(self.output_save_path, f"training_hist.png"))
+
+    def dist_of_noise_and_inverted(self, save=True, hundreds_of_imgs=1):
+        # see how far the inverted version of images are
+        im_stack = []
+        for i in range (hundreds_of_imgs):
+            exmp_imgs, _ = next(iter(self.train_loader))
+            im_stack += [*exmp_imgs[0:20]]
+
+            imgs = torch.Tensor(np.stack(im_stack, axis=0)).to(device)
+            zz, _ = self.model.encode(imgs)
+            zzz, _ = self.model.encode(NFEvaluator._invert_image(imgs))
+
+            rand_imgs = torch.rand_like(imgs)*255
+            zzzz, _ = self.model.encode(rand_imgs)
+            if i == 0:
+                z_train = zz
+                z_inverted = zzz
+                z_rand = zzzz
+            else:
+                z_train = torch.cat([z_train,zz], dim=0)
+                z_inverted = torch.cat([z_inverted, zzz], dim=0)
+                z_rand = torch.cat([z_rand, zzzz], dim=0)
+
+        plt.figure()
+        NFEvaluator._show_imgs(NFEvaluator._invert_image(imgs))
+        plt.savefig(os.path.join(self.output_save_path, 'example_inverted_image.png'))
+
+        train_dists = NFEvaluator._get_images_distance(z_train)
+        invert_dists = NFEvaluator._get_images_distance(z_inverted)
+        rand_dists = NFEvaluator._get_images_distance(z_rand)
+
+        fig = plt.figure()
+        fig.patch.set_facecolor('w')
+        plt.hist(train_dists, label='Training')
+        plt.hist(invert_dists, label='Inverted')
+        plt.hist(rand_dists, label='Noise')
+        plt.legend()
+        plt.ylabel('Count')
+        plt.xlabel('Distance from origin')
+        if save:
+            plt.savefig(os.path.join(self.output_save_path, f"hist.png"))
+
+    
+    def _invert_image(imgs):
+        return (255-imgs).to(torch.int32)
 
     def _read_model(self, model_name, ckpt_path, n_pix):
         flow = create_multiscale_flow(n_pix,n_pix)
@@ -72,6 +168,9 @@ class NFEvaluator:
             ckpt = torch.load(pretrained_filename, map_location=device)
             flow.load_state_dict(ckpt['state_dict'])
         return flow
+
+    def _get_images_distance(z):
+        return np.linalg.norm(z.reshape([z.shape[0], -1]).cpu().detach().numpy(), axis=1)
 
     @torch.no_grad()
     def _interpolate(self, img1, img2, num_steps=8):
