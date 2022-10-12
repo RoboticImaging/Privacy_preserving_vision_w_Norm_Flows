@@ -10,24 +10,23 @@ class ImageHash:
         if img_size.shape == [1,2]:
             img_size = img_size.T
         self.img_size = img_size
-        print(self.img_size)
-        self.analog_ops = [np.max, np.min]
+        self.analog_ops = [np.nanmax, np.nanmin]
 
     def compute_features(self, img):
-        spline_interp = scipy.interpolate.RectBivariateSpline(range(self.img_size[0]),
-                                                range(self.img_size[1]),img,kx=1,ky=1)
-        gridded_interp = scipy.interpolate.RegularGridInterpolator(range(self.img_size[0]), range(self.img_size[1]))                                        
+        # spline_interp = scipy.interpolate.RectBivariateSpline(range(self.img_size[0]),
+        #                                         range(self.img_size[1]),img,kx=1,ky=1)
+        gridded_interp = scipy.interpolate.RegularGridInterpolator((list(range(self.img_size[0])), list(range(self.img_size[1]))), img, bounds_error=False)                                        
         features = np.zeros([self.n_features,len(self.analog_ops)])
         for i, obj in enumerate(self.objects):
             samp = obj.get_xy_samples(100)
-            curve = spline_interp.ev(samp[:,0],samp[:,1])
+            print(obj.centre)
+            curve = gridded_interp(samp)
             
 
             # apply each analog operation to the interpolated curve
             for op_idx in range(len(self.analog_ops)):
                 features[i,op_idx] = self.analog_ops[op_idx](curve)   
 
-        print("out of bounds",spline_interp.ev(-1,-1))
         return features
 
     def get_xy_to_sample(self):
@@ -42,7 +41,7 @@ class CircleHash(ImageHash):
         self.objects = self.get_circle_params(n_features)
         self.is_random = is_random
     
-    def get_circle_params(self, n_features, r_bnd = [20,50]):
+    def get_circle_params(self, n_features, r_bnd = [2,5]):
         # given an image shape, return the centre and radii of the circles
         circs = []
         for _ in range(n_features):
@@ -54,7 +53,7 @@ class CircleHash(ImageHash):
         if self.is_random:
             self.objects = self.get_circle_params(self.n_features)
         
-        super().compute_features(img)
+        return super().compute_features(img)
 
 
 class LineHash(ImageHash):
@@ -67,5 +66,6 @@ if __name__ == "__main__":
     img = cv2.imread('data_cleaned/mono.png', cv2.IMREAD_GRAYSCALE)
     img = img[0:128,:]
     print(img.shape)
-    circ_hash = CircleHash(img.shape, 10)
+    circ_hash = CircleHash(img.shape, 3, False)
+    print(circ_hash.compute_features(img))
     print(circ_hash.compute_features(img))
