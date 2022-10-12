@@ -36,10 +36,11 @@ class ImageHash:
 
 
 class CircleHash(ImageHash):
-    def __init__(self, img_size, n_features):
+    def __init__(self, img_size, n_features, is_random=True):
         super().__init__(img_size)
         self.n_features = n_features
         self.objects = self.get_circle_params(n_features)
+        self.is_random = is_random
     
     def get_circle_params(self, n_features, r_bnd = [20,50]):
         # given an image shape, return the centre and radii of the circles
@@ -47,6 +48,13 @@ class CircleHash(ImageHash):
         for _ in range(n_features):
             circs.append(Circle(np.random.rand(2,)*self.img_size, r_bnd[0] + np.random.rand()*(r_bnd[1]-r_bnd[0])))
         return circs
+
+    def compute_features(self, img):
+        # if is randomised, reshuffle the circles
+        if self.is_random:
+            self.objects = self.get_circle_params(self.n_features)
+        
+        super().compute_features(img)
 
 
 class LineHash(ImageHash):
