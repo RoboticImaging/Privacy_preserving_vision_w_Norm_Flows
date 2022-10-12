@@ -34,22 +34,22 @@ def create_multiscale_flow(height, width):
 
 
 
-def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=100, from_version=None):
+def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=200, from_version=None):
     extra_args = {}
     if from_version is not None:
-        if from_version == -1:
+        if os.path.exists(os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs')):
+            if from_version == -1:
             # use latest version
-            version_list = os.listdir(os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs'))
+                version_list = os.listdir(os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs'))
 
-            version_list.sort(key = lambda x: int(x.split('_')[-1]))
+                version_list.sort(key = lambda x: int(x.split('_')[-1]))
 
-            ckpt_name = os.listdir(os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs',version_list[-1],'checkpoints'))[0]
-            ckpt_path = os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs',version_list[-1],'checkpoints', ckpt_name)
-        else:
-            # use version indicated
-            raise NotImplementedError
-
-        extra_args = {"resume_from_checkpoint": ckpt_path}
+                ckpt_name = os.listdir(os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs',version_list[-1],'checkpoints'))[0]
+                ckpt_path = os.path.join(CHECKPOINT_PATH, model_name,'lightning_logs',version_list[-1],'checkpoints', ckpt_name)
+            else:
+                # use version indicated
+                raise NotImplementedError
+            extra_args = {"resume_from_checkpoint": ckpt_path}
         
     # Create a PyTorch Lightning trainer
     trainer = pl.Trainer(default_root_dir=os.path.join(CHECKPOINT_PATH, model_name), 
@@ -63,7 +63,7 @@ def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=100, f
     trainer.logger._log_graph = True
     trainer.logger._default_hp_metric = None # Optional logging argument that we don't need
     
-    train_data_loader = data.DataLoader(train_set, batch_size=128, shuffle=True, drop_last=True, pin_memory=True, num_workers=8)
+    train_data_loader = data.DataLoader(train_set, batch_size=64, shuffle=True, drop_last=True, pin_memory=True, num_workers=8)
     val_loader = data.DataLoader(val_set, batch_size=64, shuffle=False, drop_last=False, num_workers=4)
     result = None
     
@@ -96,8 +96,11 @@ def discretize(sample):
 
 if __name__ == "__main__":
 
-    DATASET_PATH = "data/LSUN_Bedroom/32x32"
-    CHECKPOINT_PATH = "saved_models/bedroom_flows/32x32/"
+    n_pix = 64
+    n_epochs = 200
+
+    DATASET_PATH = f"data/LSUN_Bedroom/{n_pix}x{n_pix}"
+    CHECKPOINT_PATH = f"saved_models/bedroom_flows/{n_pix}x{n_pix}/"
 
     overall_transform =  torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
                                                      transforms.ToTensor(),
@@ -114,5 +117,4 @@ if __name__ == "__main__":
                                                     generator=torch.Generator().manual_seed(42))
 
 
-    img_size = [32,32]
-    model, result = train_flow(create_multiscale_flow(img_size[0], img_size[1]), train_set,val_set, model_name="bedroomFlow_multiscale", from_version=-1)
+    model, result = train_flow(create_multiscale_flow(n_pix,n_pix), train_set,val_set, model_name="bedroomFlow_multiscale", from_version=-1, n_epochs=n_epochs)
