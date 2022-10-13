@@ -12,10 +12,10 @@ class Line:
                             [1, 0],
                             [0, 1],
                             [0, 1]]).T
-        axesPts = np.array([[1,1],
-                            [1, img_size[0]],
-                            [1, 1],
-                            [img_size[1], 1]]).T # ones used for axes intercepts since this is the edge of the image
+        axesPts = np.array([[0,0],
+                            [0, img_size[1]],
+                            [0, 0],
+                            [img_size[0], 0]]).T # ones used for axes intercepts since this is the edge of the image
 
         self.direction_vec = np.array([np.cos(orientation), np.sin(orientation)])
 
@@ -26,7 +26,8 @@ class Line:
             matrix = np.concatenate([axesDir[:,i][:, np.newaxis], -self.direction_vec[:, np.newaxis]], axis=1)
             st = np.linalg.inv(matrix)@((self.point - axesPts[:,i])[:,np.newaxis])
             tVals[i] = st[1]
-        self.t_bound = [np.nanmax(np.where(tVals<0, tVals, np.nan)), np.nanmin(np.where(tVals>0, tVals, np.nan))]
+        dist_from_edge = 1.5
+        self.t_bound = [np.nanmax(np.where(tVals<0, tVals, np.nan))+dist_from_edge, np.nanmin(np.where(tVals>0, tVals, np.nan))-dist_from_edge]
 
     def show_line_on_img(self, img):
         plt.figure()
@@ -36,7 +37,7 @@ class Line:
         plt.plot([start[0], end[0]], [start[1], end[1]])
         plt.savefig('verify_lines.png')
 
-    def get_xy_samples(self, n_samp=100):
+    def get_xy_samples(self, n_samp=6):
         tVals = np.linspace(self.t_bound[0], self.t_bound[1], n_samp)[:,np.newaxis]
         return self.point + tVals*self.direction_vec
 
