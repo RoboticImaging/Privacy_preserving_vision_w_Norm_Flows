@@ -16,12 +16,13 @@ class ImageHash:
     def compute_features(self, img):
         # spline_interp = scipy.interpolate.RectBivariateSpline(range(self.img_size[0]),
         #                                         range(self.img_size[1]),img,kx=1,ky=1)
-        gridded_interp = scipy.interpolate.RegularGridInterpolator((list(range(self.img_size[0])), list(range(self.img_size[1]))), img, bounds_error=False)                                        
+        gridded_interp = scipy.interpolate.RegularGridInterpolator((list(range(self.img_size[0])), list(range(self.img_size[1]))), img)                                        
         features = np.zeros([self.n_features,len(self.analog_ops)])
         for i, obj in enumerate(self.objects):
             samp = obj.get_xy_samples(5)
-            # samp = np.concatenate([samp[:,1,np.newaxis],samp[:,0,np.newaxis]],axis=1)
+            print(samp)
             curve = gridded_interp(samp)
+            print(curve)
 
             # apply each analog operation to the interpolated curve
             for op_idx in range(len(self.analog_ops)):
@@ -83,9 +84,9 @@ if __name__ == "__main__":
     img = cv2.imread('data_cleaned/mono.png', cv2.IMREAD_GRAYSCALE)
     img = img[0:128,:]
 
-    line_hasher = LineHash(img.shape, 3, False)
-    print(line_hasher.compute_features(img))
-    print(line_hasher.compute_features(img))
+    # line_hasher = LineHash(img.shape, 5, False)
+    # print(line_hasher.compute_features(img))
+    # print(line_hasher.compute_features(img))
 
     # circ_hash = CircleHash(img.shape, 3, False)
     # print(circ_hash.compute_features(img))
