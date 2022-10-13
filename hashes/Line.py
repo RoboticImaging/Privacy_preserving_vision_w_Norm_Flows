@@ -43,8 +43,10 @@ class Line:
         plt.savefig('verify_lines.png')
 
     def get_xy_samples(self, n_samp=100):
-        pass
-    
+        tVals = np.linspace(self.t_bound[0], self.t_bound[1], n_samp)[:,np.newaxis]
+        return self.point + tVals*self.direction_vec
+
+
     def __str__(self):
         return f"point: ({self.point[0]:.2f},{self.point[1]:.2f}), orientation= {self.orientation:.2f}"
 
@@ -55,5 +57,5 @@ if __name__ == "__main__":
     img = img[0:128,:]
     print(img.shape)
     l = Line(np.array([20,40]), np.pi/4, img.shape)
-    l.show_line_on_img(img)
-    # print(l.get_xy_samples(5))
+    # l.show_line_on_img(img)
+    print(l.get_xy_samples(5))
