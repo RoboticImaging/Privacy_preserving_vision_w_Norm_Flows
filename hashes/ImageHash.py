@@ -19,7 +19,6 @@ class ImageHash:
         features = np.zeros([self.n_features,len(self.analog_ops)])
         for i, obj in enumerate(self.objects):
             samp = obj.get_xy_samples(100)
-            print(obj.centre)
             curve = gridded_interp(samp)
             
 
@@ -41,7 +40,7 @@ class CircleHash(ImageHash):
         self.objects = self.get_circle_params(n_features)
         self.is_random = is_random
     
-    def get_circle_params(self, n_features, r_bnd = [2,5]):
+    def get_circle_params(self, n_features, r_bnd = [20,50]):
         # given an image shape, return the centre and radii of the circles
         circs = []
         for _ in range(n_features):
@@ -57,9 +56,18 @@ class CircleHash(ImageHash):
 
 
 class LineHash(ImageHash):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, img_size):
+        super().__init__(img_size)
+        self.n_features = n_features
+        self.objects = self.get_circle_params(n_features)
+        self.is_random = is_random
 
+    def get_line_params(self, n_features, r_bnd = [20,50]):
+        # given an image shape, return the centre and radii of the circles
+        lines = []
+        for _ in range(n_features):
+            lines.append(Circle(np.random.rand(2,)*self.img_size, r_bnd[0] + np.random.rand()*(r_bnd[1]-r_bnd[0])))
+        return lines
 
 if __name__ == "__main__":
     import cv2
