@@ -7,8 +7,6 @@ class Line:
         assert(point.size == 2)
         assert(not np.isclose(orientation % np.pi/2, 0))
         self.point = point
-        self.orientation = orientation
-        self.img_size = img_size
 
         axesDir = np.array([[1, 0],
                             [1, 0],
@@ -19,7 +17,7 @@ class Line:
                             [1, 1],
                             [img_size[1], 1]]).T # ones used for axes intercepts since this is the edge of the image
 
-        self.direction_vec = np.array([np.cos(self.orientation), np.sin(self.orientation)])
+        self.direction_vec = np.array([np.cos(orientation), np.sin(orientation)])
 
         n_sides = 4 # of a rectangle
 
@@ -29,10 +27,6 @@ class Line:
             st = np.linalg.inv(matrix)@((self.point - axesPts[:,i])[:,np.newaxis])
             tVals[i] = st[1]
         self.t_bound = [np.nanmax(np.where(tVals<0, tVals, np.nan)), np.nanmin(np.where(tVals>0, tVals, np.nan))]
-        print(self.t_bound)
-
-        print(self.point + self.t_bound[0]*self.direction_vec)
-        print(self.point + self.t_bound[1]*self.direction_vec)
 
     def show_line_on_img(self, img):
         plt.figure()
