@@ -2,15 +2,20 @@ import numpy as np
 
 
 class Circle:
-    def __init__(self, centre, radius):
+    def __init__(self, centre, radius, img_size):
         assert(centre.size == 2)
         self.centre = centre
         self.radius = radius
+        self.img_size = img_size
 
     def get_xy_samples(self, n_samp=100):
         theta = np.linspace(0, 2*np.pi, n_samp+1)[0:-1]
         x = self.centre[0] + self.radius*np.cos(theta)
         y = self.centre[1] + self.radius*np.sin(theta)
+
+
+        x = np.where((x < 0) | (x > self.img_size[0]-1), np.nan, x)
+        y = np.where((y < 0) | (y > self.img_size[1]-1), np.nan, y)
         return np.concatenate([[x],[y]]).T
     
     def __str__(self):

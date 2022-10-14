@@ -13,9 +13,9 @@ class Line:
                             [0, 1],
                             [0, 1]]).T
         axesPts = np.array([[0,0],
-                            [0, img_size[1]],
+                            [0, img_size[1]-1],
                             [0, 0],
-                            [img_size[0], 0]]).T # ones used for axes intercepts since this is the edge of the image
+                            [img_size[0]-1, 0]]).T # ones used for axes intercepts since this is the edge of the image
 
         self.direction_vec = np.array([np.cos(orientation), np.sin(orientation)])
 

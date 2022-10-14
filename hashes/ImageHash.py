@@ -16,7 +16,7 @@ class ImageHash:
     def compute_features(self, img):
         # spline_interp = scipy.interpolate.RectBivariateSpline(range(self.img_size[0]),
         #                                         range(self.img_size[1]),img,kx=1,ky=1)
-        gridded_interp = scipy.interpolate.RegularGridInterpolator((list(range(self.img_size[0])), list(range(self.img_size[1]))), img)                                        
+        gridded_interp = scipy.interpolate.RegularGridInterpolator((list(range(self.img_size[0])), list(range(self.img_size[1]))), img, bounds_error=False)                                        
         features = np.zeros([self.n_features,len(self.analog_ops)])
         for i, obj in enumerate(self.objects):
             samp = obj.get_xy_samples(5)
@@ -46,7 +46,7 @@ class CircleHash(ImageHash):
         # given an image shape, return the centre and radii of the circles
         circs = []
         for _ in range(n_features):
-            circs.append(Circle(np.random.rand(2,)*self.img_size, r_bnd[0] + np.random.rand()*(r_bnd[1]-r_bnd[0])))
+            circs.append(Circle(np.random.rand(2,)*self.img_size, r_bnd[0] + np.random.rand()*(r_bnd[1]-r_bnd[0]), self.img_size))
         return circs
 
     def compute_features(self, img):
@@ -88,6 +88,6 @@ if __name__ == "__main__":
     # print(line_hasher.compute_features(img))
     # print(line_hasher.compute_features(img))
 
-    # circ_hash = CircleHash(img.shape, 3, False)
-    # print(circ_hash.compute_features(img))
-    # print(circ_hash.compute_features(img))
+    circ_hash = CircleHash(img.shape, 3, False)
+    print(circ_hash.compute_features(img))
+    print(circ_hash.compute_features(img))
