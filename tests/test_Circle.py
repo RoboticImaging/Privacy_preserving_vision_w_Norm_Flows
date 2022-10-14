@@ -5,41 +5,25 @@ import numpy as np
 
 class TestCircleOutputs(unittest.TestCase):
     def test_output_size(self):
-        c = Circle(np.array([0,0]),1.)
+        c = Circle(np.array([0,0]),1., [256,256])
         self.assert_(c.get_xy_samples(100).shape == (100,2))
         self.assert_(c.get_xy_samples(200).shape == (200,2))
 
-    def test_radius(self):
-        # unit circle
-        c = Circle(np.array([0,0]),1.)
-        
-        samples = c.get_xy_samples(100)
-
-        for sampleIdx in range(samples.shape[0]):
-            np.testing.assert_almost_equal(np.sqrt(samples[sampleIdx, 0]**2 + samples[sampleIdx, 1]**2), 1.)
-        
-        # bigger circ
-        c = Circle(np.array([0,0]),2.5)
-        
-        samples = c.get_xy_samples(100)
-
-        for sampleIdx in range(samples.shape[0]):
-            np.testing.assert_almost_equal(np.sqrt(samples[sampleIdx, 0]**2 + samples[sampleIdx, 1]**2), 2.5)
-            
+    def test_radius(self):            
         # moved circ
-        c = Circle(np.array([1,2]),2.5)
+        c = Circle(np.array([10,20]),2.5, [256,256])
         
         samples = c.get_xy_samples(100)
 
         for sampleIdx in range(samples.shape[0]):
-            np.testing.assert_almost_equal(np.sqrt((samples[sampleIdx, 0]-1)**2 + (samples[sampleIdx, 1]-2)**2), 2.5)
+            np.testing.assert_almost_equal(np.sqrt((samples[sampleIdx, 0]-10)**2 + (samples[sampleIdx, 1]-20)**2), 2.5)
 
     def test_circle_coverage(self):
-        x = 1.
-        y = 2.
+        x = 10.
+        y = 20.
         r = 3.
 
-        c = Circle(np.array([x,y]),r)
+        c = Circle(np.array([x,y]),r, [256,256])
         samples = c.get_xy_samples(4)
 
         np.testing.assert_almost_equal(samples[0,:], np.array([x+r,y]))
