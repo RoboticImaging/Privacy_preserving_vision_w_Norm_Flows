@@ -32,6 +32,9 @@ class ImageHash:
 
     def get_xy_to_sample(self):
         raise NotImplementedError()
+    
+    def get_image_size(self):
+        return self.img_size
 
 
 
