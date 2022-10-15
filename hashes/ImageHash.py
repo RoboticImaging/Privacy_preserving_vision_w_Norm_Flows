@@ -5,7 +5,7 @@ from Line import Line
 
 import scipy.interpolate
 
-class ImageHash:
+class ImageHasher:
     def __init__(self, img_size):
         img_size = np.array(img_size)
         if img_size.shape == [1,2]:
@@ -35,10 +35,11 @@ class ImageHash:
     
     def get_image_size(self):
         return self.img_size
+    
 
 
 
-class CircleHash(ImageHash):
+class CircleHasher(ImageHasher):
     def __init__(self, img_size, n_features, is_random=True):
         super().__init__(img_size)
         self.n_features = n_features
@@ -60,7 +61,7 @@ class CircleHash(ImageHash):
         return super().compute_features(img)
 
 
-class LineHash(ImageHash):
+class LineHasher(ImageHasher):
     def __init__(self, img_size, n_features, is_random=True):
         super().__init__(img_size)
         self.n_features = n_features
@@ -87,10 +88,10 @@ if __name__ == "__main__":
     img = cv2.imread('data_cleaned/mono.png', cv2.IMREAD_GRAYSCALE)
     img = img[0:128,:]
 
-    # line_hasher = LineHash(img.shape, 5, False)
+    # line_hasher = LineHasher(img.shape, 5, False)
     # print(line_hasher.compute_features(img))
     # print(line_hasher.compute_features(img))
 
-    circ_hash = CircleHash(img.shape, 3, False)
-    print(circ_hash.compute_features(img))
-    print(circ_hash.compute_features(img))
+    circ_hasher = CircleHasher(img.shape, 3, False)
+    print(circ_hasher.compute_features(img))
+    print(circ_hasher.compute_features(img))
