@@ -20,9 +20,9 @@ class ImageHasher:
         features = np.zeros([self.n_features,len(self.analog_ops)])
         for i, obj in enumerate(self.objects):
             samp = obj.get_xy_samples(5)
-            print(samp)
+            # print(samp)
             curve = gridded_interp(samp)
-            print(curve)
+            # print(curve)
 
             # apply each analog operation to the interpolated curve
             for op_idx in range(len(self.analog_ops)):

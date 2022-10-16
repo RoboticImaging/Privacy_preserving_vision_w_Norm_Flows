@@ -1,5 +1,7 @@
 import numpy as np
 
+from ImageHasher import ImageHasher
+
 
 class AttackEvaluator:
     def __init__(self, datatset_path):
