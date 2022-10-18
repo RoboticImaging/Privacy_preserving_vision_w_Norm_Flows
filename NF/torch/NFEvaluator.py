@@ -205,6 +205,7 @@ class NFEvaluator:
         interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
         return interp_imgs
 
+    @classmethod
     def _show_imgs(imgs, title=None, row_size=8):
         # Form a grid of pictures (we use max. 8 columns)
         num_imgs = imgs.shape[0] if isinstance(imgs, torch.Tensor) else len(imgs)
