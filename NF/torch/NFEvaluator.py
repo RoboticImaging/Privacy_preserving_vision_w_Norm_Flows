@@ -26,6 +26,25 @@ class NFEvaluator:
         self.train_loader = train_loader
         self.exmp_imgs, _ = next(iter(train_loader))
 
+        self.model_params = NFEvaluator.get_model_dict(model_name)
+
+    def get_model_dict(model_name):
+        if model_name == 'bedroomFlow_multiscale':
+            model_set = {
+                'n_vardq' : 4,
+                'n_coupling_pre_split' : 2, 
+                'n_coupling_post_split' : 4
+                }
+        elif model_name == 'bedroomFlow_multiscale_complex':
+            model_set = {
+                'n_vardq' : 6,
+                'n_coupling_pre_split' : 4, 
+                'n_coupling_post_split' : 7
+                }
+        else:
+            raise NotImplementedError(f"{model_name} doen't have dsets defined")
+        
+        return model_set
 
     def run_all_eval(self):
         self.get_results()
@@ -160,7 +179,7 @@ class NFEvaluator:
         return (255-imgs).to(torch.int32)
 
     def _read_model(self, model_name, ckpt_path, n_pix):
-        flow = create_multiscale_flow(n_pix,n_pix)
+        flow = create_multiscale_flow(n_pix,n_pix, **self.model_params)
         device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
         pretrained_filename = os.path.join(ckpt_path, model_name,"model.ckpt")
         if os.path.isfile(pretrained_filename):

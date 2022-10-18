@@ -4,25 +4,25 @@ from ImageFlow import ImageFlow
 import torchvision
 from torchvision import transforms
 
-def create_multiscale_flow(height, width):
+def create_multiscale_flow(height, width, n_vardq=4, n_coupling_pre_split=2, n_coupling_post_split=4):
     flow_layers = []
     
     vardeq_layers = [CouplingLayer(network=GatedConvNet(c_in=2, c_out=2, c_hidden=16),
                                    mask=create_checkerboard_mask(h=height, w=width, invert=(i%2==1)),
-                                   c_in=1) for i in range(4)]
+                                   c_in=1) for i in range(n_vardq)]
     flow_layers += [VariationalDequantization(vardeq_layers)]
     
     flow_layers += [CouplingLayer(network=GatedConvNet(c_in=1, c_hidden=32),
                                   mask=create_checkerboard_mask(h=height, w=width, invert=(i%2==1)),
-                                  c_in=1) for i in range(2)]
+                                  c_in=1) for i in range(n_coupling_pre_split)]
     flow_layers += [SqueezeFlow()]
-    for i in range(2):
+    for i in range(n_coupling_pre_split):
         flow_layers += [CouplingLayer(network=GatedConvNet(c_in=4, c_hidden=48),
                                       mask=create_channel_mask(c_in=4, invert=(i%2==1)),
                                       c_in=4)]
     flow_layers += [SplitFlow(),
                     SqueezeFlow()]
-    for i in range(4):
+    for i in range(n_coupling_post_split):
         flow_layers += [CouplingLayer(network=GatedConvNet(c_in=8, c_hidden=64),
                                       mask=create_channel_mask(c_in=8, invert=(i%2==1)),
                                       c_in=8)]
@@ -63,8 +63,8 @@ def train_flow(flow, train_set, val_set, model_name="MNISTFlow", n_epochs=200, f
     trainer.logger._log_graph = True
     trainer.logger._default_hp_metric = None # Optional logging argument that we don't need
     
-    train_data_loader = data.DataLoader(train_set, batch_size=64, shuffle=True, drop_last=True, pin_memory=True, num_workers=8)
-    val_loader = data.DataLoader(val_set, batch_size=64, shuffle=False, drop_last=False, num_workers=4)
+    train_data_loader = data.DataLoader(train_set, batch_size=32, shuffle=True, drop_last=True, pin_memory=True, num_workers=8)
+    val_loader = data.DataLoader(val_set, batch_size=32, shuffle=False, drop_last=False, num_workers=4)
     result = None
     
     # Check whether pretrained model exists. If yes, load it and skip training
@@ -97,7 +97,7 @@ def discretize(sample):
 if __name__ == "__main__":
 
     n_pix = 64
-    n_epochs = 200
+    n_epochs = 300
 
     DATASET_PATH = f"data/LSUN_Bedroom/{n_pix}x{n_pix}"
     CHECKPOINT_PATH = f"saved_models/bedroom_flows/{n_pix}x{n_pix}/"
@@ -106,7 +106,7 @@ if __name__ == "__main__":
                                                      transforms.ToTensor(),
                                                      discretize])
     full_dset = torchvision.datasets.ImageFolder(root=DATASET_PATH, transform=overall_transform)
-    train_val_test_splits = np.array([0.8,0.1,0.1])
+    train_val_test_splits = np.array([0.4,0.1,0.1])
     n_imgs = len(full_dset)
 
     img_splits = (train_val_test_splits*n_imgs).round().astype(int)
@@ -117,4 +117,4 @@ if __name__ == "__main__":
                                                     generator=torch.Generator().manual_seed(42))
 
 
-    model, result = train_flow(create_multiscale_flow(n_pix,n_pix), train_set,val_set, model_name="bedroomFlow_multiscale", from_version=-1, n_epochs=n_epochs)
+    model, result = train_flow(create_multiscale_flow(n_pix,n_pix, n_vardq=6, n_coupling_pre_split=4,n_coupling_post_split=7), train_set,val_set, model_name="bedroomFlow_multiscale_complex", from_version=-1, n_epochs=n_epochs)
