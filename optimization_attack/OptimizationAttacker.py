@@ -1,6 +1,6 @@
 
 import numpy as np
-
+import scipy.optimize
 
 
 class OptimizationAttacker:
@@ -17,6 +17,16 @@ class OptimizationAttacker:
 
     def hash_norm(hash1, hash2):
         return np.linalg.norm(OptimizationAttacker.hash_diff(hash1, hash2))
+    
+    def flatten_img(self, img):
+        return img.flatten()
+    
+    def unflatten_img(self, img_flat):
+        return np.reshape(img_flat, self.image_hasher.get_image_size())
+
+    def get_hash_of_est(self, img_flat):
+        img = self.unflatten_img(img_flat)
+        return self.image_hasher.compute_features(img)
 
 
 class ImageSpaceAttack(OptimizationAttacker):
@@ -26,11 +36,14 @@ class ImageSpaceAttack(OptimizationAttacker):
 
     def attack(self, target_hash, starting_img):
         opt_fn = lambda img_flat : OptimizationAttacker.hash_diff(self.get_hash_of_est(img_flat), target_hash)
-        return opt_fn(starting_img)
 
-    def get_hash_of_est(self, img_flat):
-        img = np.reshape(img_flat, self.image_hasher.get_image_size())
-        return self.image_hasher.compute_features(img_flat)
+        # print(starting_img.flatten())
+        # print(np.all(np.reshape(starting_img.flatten(), self.image_hasher.get_image_size()) == starting_img))
+
+        result = scipy.optimize.least_squares(opt_fn , starting_img.flatten(), verbose=2, ftol=1e-2)
+
+        return self.unflatten_img(result.x), result.message, result.niter
+
 
 class NFSpaceAttack(OptimizationAttacker):
     # attack using a trained Normalising Flow
@@ -53,9 +66,12 @@ if __name__ == "__main__":
     dset = 'data_cleaned\Digeto_seq_2_subset'
     # print(os.path.join(dset, "00001.png"))
     img = cv2.imread(os.path.join(dset, "00001.png"), cv2.IMREAD_GRAYSCALE)
+    img = cv2.resize(img, (img.shape[1]//8 , img.shape[0]//8))
 
     ch = CircleHasher(img.shape, 10, False)
-    print(ch.compute_features(img))
+
+    true_hash = ch.compute_features(img)
+    print(true_hash)
 
     print(img.shape, (img.shape[0]//4 , img.shape[1]//4))
     img_smol = cv2.resize(img, (img.shape[1]//4 , img.shape[0]//4))
@@ -63,6 +79,10 @@ if __name__ == "__main__":
     print(downsampled_img.shape)
     print(ch.compute_features(downsampled_img))
 
+
+    attacker = ImageSpaceAttack(ch)
+    final_img = attacker.attack(true_hash, downsampled_img)
+    print(final_img)
 
     # print(ch.compute_features(img))
 
