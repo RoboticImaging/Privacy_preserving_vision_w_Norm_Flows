@@ -40,9 +40,9 @@ class ImageSpaceAttack(OptimizationAttacker):
         # print(starting_img.flatten())
         # print(np.all(np.reshape(starting_img.flatten(), self.image_hasher.get_image_size()) == starting_img))
 
-        result = scipy.optimize.least_squares(opt_fn , starting_img.flatten(), verbose=2, ftol=1e-2)
+        result = scipy.optimize.least_squares(opt_fn , starting_img.flatten(), verbose=2, ftol=1e-3, bounds=(0,255))
 
-        return self.unflatten_img(result.x), result.message, result.niter
+        return self.unflatten_img(result.x), result.success, result.nfev
 
 
 class NFSpaceAttack(OptimizationAttacker):
