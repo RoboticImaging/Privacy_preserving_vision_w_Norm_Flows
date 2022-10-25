@@ -97,6 +97,7 @@ def discretize(sample):
 
 if __name__ == "__main__":
 
+    raise NotImplementedError("change eval code in layers to use multiscale part correctly in split flow!")
     n_pix = 64
     n_epochs = 300
 

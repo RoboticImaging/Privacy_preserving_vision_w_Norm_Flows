@@ -34,9 +34,9 @@ if __name__ == "__main__":
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=256, shuffle=False, drop_last=False)
  
     eval = NFEvaluator(n_pix, model_name, train_loader)
-    eval.standard_interp()
+    # eval.standard_interp()
     # eval.show_random_samples()
-    # eval.interp_inside_out()
+    eval.interp_inside_out()
     # eval.interp_inside_out_rand_dir()
     # eval.hist_of_training_imgs()
     # eval.dist_of_noise_and_inverted()

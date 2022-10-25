@@ -63,8 +63,7 @@ class NFEvaluator:
             interp_imgs = self._interpolate(self.exmp_imgs[2*i], self.exmp_imgs[2*i+1], n_step)
             self._show_imgs(interp_imgs)
             if save:
-                margin = 0.00001
-                plt.subplots_adjust(left=margin, bottom=margin, right=1-margin, top=1-margin)
+                self._tight_margins()
                 plt.savefig(os.path.join(self.output_save_path, f"standard_interp_{i}.png"))
                 # plt.savefig(os.path.join(self.output_save_path, f"standard_interp_{i}.png"), bbox_inches='tight')
 
@@ -78,12 +77,16 @@ class NFEvaluator:
             zVals = torch.zeros_like(z)
             zVals[0,:] = z[1,:]/torch.norm(z[1,:])
 
-            alpha = torch.linspace(0, self.n_pix*2, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
+            alpha = torch.linspace(0, self.n_pix*1.5, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
             interpolations = zVals[0:1] * alpha + zVals[1:2] * (1 - alpha)
+
+            print(interpolations.shape)
+            print(interpolations[0,:,:,:])
 
             interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
             self._show_imgs(interp_imgs, row_size=num_steps)
             if save:
+                self._tight_margins()
                 plt.savefig(os.path.join(self.output_save_path, f"inside_out_{i}.png"))
 
     def interp_inside_out_rand_dir(self, save=True, n_times = 3, num_steps = 15):
@@ -97,13 +100,13 @@ class NFEvaluator:
             rand = torch.randn_like(z[1,:])
             zVals[0,:] = rand/torch.norm(rand)
 
-            alpha = torch.linspace(0, 2*self.n_pix, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
+            alpha = torch.linspace(0, 1.5*self.n_pix, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
             interpolations = zVals[0:1] * alpha + zVals[1:2] * (1 - alpha)
 
             interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
-            print(interp_imgs[0,0,:,:])
             self._show_imgs(interp_imgs, row_size=num_steps)
             if save:
+                self._tight_margins()
                 plt.savefig(os.path.join(self.output_save_path, f"inside_out_rand_{i}.png"))
     
     def show_random_samples(self, n_imgs = 16, save=True):
@@ -111,6 +114,7 @@ class NFEvaluator:
         samples = self.model.sample(img_shape=[n_imgs, 8,self.n_pix//4,self.n_pix//4])
         self._show_imgs(samples.cpu())
         if save:
+            self._tight_margins()
             plt.savefig(os.path.join(self.output_save_path, f"random_sample.png"))
     
     def hist_of_training_imgs(self, save=True, hundreds_of_imgs=2):
@@ -226,4 +230,6 @@ class NFEvaluator:
         if title is not None:
             plt.title(title)
 
-    
+    def _tight_margins(self):
+        margin = 0.00001
+        plt.subplots_adjust(left=margin, bottom=margin, right=1-margin, top=1-margin)
