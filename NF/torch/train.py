@@ -27,7 +27,8 @@ def create_multiscale_flow(height, width, n_vardq=4, n_coupling_pre_split=2, n_c
                                       mask=create_channel_mask(c_in=8, invert=(i%2==1)),
                                       c_in=8)]
 
-    device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+    device = torch.device("cpu")
+    # device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
     flow_model = ImageFlow(flow_layers).to(device)
     return flow_model
 
