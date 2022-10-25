@@ -26,7 +26,7 @@ class Line:
             matrix = np.concatenate([axesDir[:,i][:, np.newaxis], -self.direction_vec[:, np.newaxis]], axis=1)
             st = np.linalg.inv(matrix)@((self.point - axesPts[:,i])[:,np.newaxis])
             tVals[i] = st[1]
-        dist_from_edge = 1.5
+        dist_from_edge = 0.01
         self.t_bound = [np.nanmax(np.where(tVals<0, tVals, np.nan))+dist_from_edge, np.nanmin(np.where(tVals>0, tVals, np.nan))-dist_from_edge]
 
     def show_line_on_img(self, img):
@@ -34,7 +34,7 @@ class Line:
         plt.imshow(img, cmap='gray', vmin=0, vmax=255)
         start = self.point + self.t_bound[0]*self.direction_vec
         end = self.point + self.t_bound[1]*self.direction_vec
-        plt.plot([start[0], end[0]], [start[1], end[1]])
+        plt.plot([start[1], end[1]], [start[0], end[0]])
         plt.savefig('verify_lines.png')
 
     def get_xy_samples(self, n_samp=6):

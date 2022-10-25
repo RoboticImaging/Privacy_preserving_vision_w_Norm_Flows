@@ -40,17 +40,18 @@ class ImageHasher:
 
 
 class CircleHasher(ImageHasher):
-    def __init__(self, img_size, n_features, is_random=True):
+    def __init__(self, img_size, n_features, is_random=True, r_bnd = [20,50]):
         super().__init__(img_size)
         self.n_features = n_features
+        self.r_bnd = r_bnd 
         self.objects = self.get_circle_params(n_features)
         self.is_random = is_random
     
-    def get_circle_params(self, n_features, r_bnd = [20,50]):
+    def get_circle_params(self, n_features):
         # given an image shape, return the centre and radii of the circles
         circs = []
         for _ in range(n_features):
-            circs.append(Circle(np.random.rand(2,)*self.img_size, r_bnd[0] + np.random.rand()*(r_bnd[1]-r_bnd[0]), self.img_size))
+            circs.append(Circle(np.random.rand(2,)*self.img_size, self.r_bnd[0] + np.random.rand()*(self.r_bnd[1]-self.r_bnd[0]), self.img_size))
         return circs
 
     def compute_features(self, img):
@@ -72,7 +73,7 @@ class LineHasher(ImageHasher):
         # given an image shape, return the centre and radii of the circles
         lines = []
         for _ in range(self.n_features):
-            lines.append(Line(np.random.rand(2,)*self.img_size, np.random.rand()*2*np.pi, self.img_size))
+            lines.append(Line(np.random.rand(2,)*(self.img_size-1), np.random.rand()*2*np.pi, self.img_size))
         return lines
 
     def compute_features(self, img):
