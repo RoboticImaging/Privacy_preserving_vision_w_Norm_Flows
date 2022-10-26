@@ -6,7 +6,9 @@ import torchvision
 import matplotlib.pyplot as plt
 import numpy as np
 
-device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+
+device = torch.device("cpu")
+# device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
 
 class NFEvaluator:
     def __init__(self, n_pix, model_name, train_loader, 
@@ -15,6 +17,7 @@ class NFEvaluator:
         # load the model 
         self.n_pix = n_pix
         ckpt_pth = os.path.join(ckpt_pth, f'{n_pix}x{n_pix}')
+        self.model_params = NFEvaluator.get_model_dict(model_name)
         self.model = self._read_model(model_name, ckpt_pth, n_pix)
         
         # setup figure saving path
@@ -26,7 +29,6 @@ class NFEvaluator:
         self.train_loader = train_loader
         self.exmp_imgs, _ = next(iter(train_loader))
 
-        self.model_params = NFEvaluator.get_model_dict(model_name)
 
     def get_model_dict(model_name):
         if model_name == 'bedroomFlow_multiscale':
@@ -54,14 +56,16 @@ class NFEvaluator:
         # compute results as in UvA tute
         pass
     
-    def standard_interp(self, save=True, n_imgs = 5):
+    def standard_interp(self, save=True, n_imgs = 6):
         # interp between some samples 
         n_step = 8
         for i in range(n_imgs):
             interp_imgs = self._interpolate(self.exmp_imgs[2*i], self.exmp_imgs[2*i+1], n_step)
-            NFEvaluator._show_imgs(interp_imgs)
+            self._show_imgs(interp_imgs)
             if save:
+                self._tight_margins()
                 plt.savefig(os.path.join(self.output_save_path, f"standard_interp_{i}.png"))
+                # plt.savefig(os.path.join(self.output_save_path, f"standard_interp_{i}.png"), bbox_inches='tight')
 
     def interp_inside_out(self, save=True, n_times = 3, num_steps = 15):
         # interp out from mean to some fixed distance out through training data
@@ -73,15 +77,19 @@ class NFEvaluator:
             zVals = torch.zeros_like(z)
             zVals[0,:] = z[1,:]/torch.norm(z[1,:])
 
-            alpha = torch.linspace(0, self.n_pix*2, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
+            alpha = torch.linspace(0, self.n_pix*1.5, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
             interpolations = zVals[0:1] * alpha + zVals[1:2] * (1 - alpha)
 
+            print(interpolations.shape)
+            print(interpolations[0,:,:,:])
+
             interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
-            NFEvaluator._show_imgs(interp_imgs, row_size=num_steps)
+            self._show_imgs(interp_imgs, row_size=num_steps)
             if save:
+                self._tight_margins()
                 plt.savefig(os.path.join(self.output_save_path, f"inside_out_{i}.png"))
 
-    def interp_inside_out_rand_dir(self, save=True, n_times = 3, num_steps = 9):
+    def interp_inside_out_rand_dir(self, save=True, n_times = 3, num_steps = 15):
         # pick a random direction and interp out from it for a fixed distance
         for i in range(n_times):
             imgs = torch.stack([self.exmp_imgs[i], self.exmp_imgs[i]], dim=0).to(self.model.device)
@@ -92,19 +100,21 @@ class NFEvaluator:
             rand = torch.randn_like(z[1,:])
             zVals[0,:] = rand/torch.norm(rand)
 
-            alpha = torch.linspace(0, 2*self.n_pix, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
+            alpha = torch.linspace(0, 1.5*self.n_pix, steps=num_steps, device=z.device).view(-1, 1, 1, 1)
             interpolations = zVals[0:1] * alpha + zVals[1:2] * (1 - alpha)
 
             interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
-            NFEvaluator._show_imgs(interp_imgs, row_size=num_steps)
+            self._show_imgs(interp_imgs, row_size=num_steps)
             if save:
+                self._tight_margins()
                 plt.savefig(os.path.join(self.output_save_path, f"inside_out_rand_{i}.png"))
     
     def show_random_samples(self, n_imgs = 16, save=True):
         # create some images from the model
         samples = self.model.sample(img_shape=[n_imgs, 8,self.n_pix//4,self.n_pix//4])
-        NFEvaluator._show_imgs(samples.cpu())
+        self._show_imgs(samples.cpu())
         if save:
+            self._tight_margins()
             plt.savefig(os.path.join(self.output_save_path, f"random_sample.png"))
     
     def hist_of_training_imgs(self, save=True, hundreds_of_imgs=2):
@@ -133,7 +143,7 @@ class NFEvaluator:
         if save:
             plt.savefig(os.path.join(self.output_save_path, f"training_hist.png"))
 
-    def dist_of_noise_and_inverted(self, save=True, hundreds_of_imgs=1):
+    def dist_of_noise_and_inverted(self, save=True, hundreds_of_imgs=10):
         # see how far the inverted version of images are
         im_stack = []
         for i in range (hundreds_of_imgs):
@@ -156,7 +166,7 @@ class NFEvaluator:
                 z_rand = torch.cat([z_rand, zzzz], dim=0)
 
         plt.figure()
-        NFEvaluator._show_imgs(NFEvaluator._invert_image(imgs))
+        self._show_imgs(NFEvaluator._invert_image(imgs))
         plt.savefig(os.path.join(self.output_save_path, 'example_inverted_image.png'))
 
         train_dists = NFEvaluator._get_images_distance(z_train)
@@ -205,8 +215,7 @@ class NFEvaluator:
         interp_imgs = self.model.sample(interpolations.shape[:1] + imgs.shape[1:], z_init=interpolations)
         return interp_imgs
 
-    @classmethod
-    def _show_imgs(imgs, title=None, row_size=8):
+    def _show_imgs(self,imgs, title=None, row_size=8):
         # Form a grid of pictures (we use max. 8 columns)
         num_imgs = imgs.shape[0] if isinstance(imgs, torch.Tensor) else len(imgs)
         is_int = imgs.dtype==torch.int32 if isinstance(imgs, torch.Tensor) else imgs[0].dtype==torch.int32
@@ -216,9 +225,11 @@ class NFEvaluator:
         np_imgs = imgs.cpu().numpy()
         # Plot the grid
         plt.figure(figsize=(1.5*nrow, 1.5*ncol))
-        plt.imshow(np.transpose(np_imgs, (1,2,0)), interpolation='nearest')
+        plt.imshow(np.transpose(np_imgs, (1,2,0)), interpolation='nearest', vmin=0, vmax=255)
         plt.axis('off')
         if title is not None:
             plt.title(title)
 
-    
+    def _tight_margins(self):
+        margin = 0.00001
+        plt.subplots_adjust(left=margin, bottom=margin, right=1-margin, top=1-margin)

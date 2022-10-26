@@ -8,9 +8,10 @@ import numpy as np
 
 
 if __name__ == "__main__":
-    n_pix = 64
+    n_pix = 32
     DATASET_PATH = f"data/LSUN_Bedroom/{n_pix}x{n_pix}"
     model_name = 'bedroomFlow_multiscale'
+    # model_name = 'bedroomFlow_multiscale_complex'
 
     overall_transform =  torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
                                                      transforms.ToTensor(),
@@ -32,11 +33,10 @@ if __name__ == "__main__":
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=256, shuffle=False, drop_last=False)
  
-    raise NotImplementedError("Need to change to use the correct number of layers before reading in the model...")
     eval = NFEvaluator(n_pix, model_name, train_loader)
-    eval.standard_interp()
-    eval.show_random_samples()
+    # eval.standard_interp()
+    # eval.show_random_samples()
     eval.interp_inside_out()
-    eval.interp_inside_out_rand_dir()
+    # eval.interp_inside_out_rand_dir()
     # eval.hist_of_training_imgs()
-    eval.dist_of_noise_and_inverted()
+    # eval.dist_of_noise_and_inverted()

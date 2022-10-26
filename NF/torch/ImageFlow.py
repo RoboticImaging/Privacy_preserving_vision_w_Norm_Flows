@@ -7,7 +7,8 @@ import torch.optim as optim
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
-device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+device = torch.device("cpu")
+# device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
 
 class ImageFlow(pl.LightningModule):
     # A class to make normalising flows for image generation
