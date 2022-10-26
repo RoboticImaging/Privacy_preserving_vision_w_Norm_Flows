@@ -27,8 +27,9 @@ class AttackEvaluator:
     def eval_image_space_attack(self):
         fname = "00768.png"
         img = cv2.imread(os.path.join(self.datatset_path, fname), cv2.IMREAD_GRAYSCALE)
-        img = cv2.resize(img, (img.shape[1]//8 , img.shape[0]//8), interpolation=cv2.INTER_AREA)
-        self.generate_insets(fname, img, 'true_img')
+        init_downscale = 16
+        img = cv2.resize(img, (img.shape[1]//init_downscale , img.shape[0]//init_downscale), interpolation=cv2.INTER_AREA)
+        self.generate_insets(fname, img, init_downscale, 'true_img')
 
         # plt.savefig(os.path.join(self.save_path, 'image_space_attack', 'true_img.png'))
         cv2.imwrite(os.path.join(self.save_path, 'image_space_attack', 'true_img_cv.png'), img)
@@ -36,9 +37,9 @@ class AttackEvaluator:
         with open(os.path.join(self.save_path, 'image_space_attack', 'true_img'), 'wb') as f:
             pickle.dump(img, f)
 
-
-        ch = CircleHasher(img.shape, 50, False, r_bnd = (5,20))
-        # ch = LineHasher(img.shape, 50, False)
+        n_features = 50
+        # ch = CircleHasher(img.shape, n_features, False, r_bnd = (3,8))
+        ch = LineHasher(img.shape, n_features, False)
 
         with open(os.path.join(self.save_path, 'image_space_attack', 'hash'), 'wb') as f:
             pickle.dump(ch, f)
@@ -53,7 +54,7 @@ class AttackEvaluator:
         # self.show_img(downsampled_img)
         # plt.savefig(os.path.join(self.save_path, 'image_space_attack', 'starting_img.png'))
         cv2.imwrite(os.path.join(self.save_path, 'image_space_attack', 'starting_img.png'), downsampled_img)
-        self.generate_insets(fname, downsampled_img, 'downsampled_img')
+        self.generate_insets(fname, downsampled_img, init_downscale, 'downsampled_img')
 
         # with open(os.path.join(self.save_path, 'image_space_attack', 'starting_img'), 'wb') as f:
         #     pickle.dump(downsampled_img, f)
@@ -64,7 +65,7 @@ class AttackEvaluator:
         print(f"SUCCESS ={is_done}, used {n_fev} function evals")
         # plt.savefig(os.path.join(self.save_path, 'image_space_attack', 'final_img.png'))
         cv2.imwrite(os.path.join(self.save_path, 'image_space_attack', 'final_img.png'), final_img)
-        self.generate_insets(fname, final_img, 'final_img')
+        self.generate_insets(fname, final_img, init_downscale, 'final_img')
         
         end_time = time.time()
         print(f"Elapsed time is {end_time-start_time:.2f}s")
@@ -77,7 +78,8 @@ class AttackEvaluator:
         plt.imshow(img, cmap='gray', vmin=0, vmax=255)
         plt.axis('off')
 
-    def generate_insets(self, fname, img, prefix=''):
+    def generate_insets(self, fname, img, init_downscale, prefix=''):
+        rescale = init_downscale//8
         if fname == '00768.png':
             insets = []
             insets.append(InsetBox([25,82], [50, 103], 'printer'))
@@ -85,8 +87,9 @@ class AttackEvaluator:
             insets.append(InsetBox([0,159//4], [4, 3*(159//4)], 'top_row'))
         else:
             raise NotImplementedError()
-        
+
         for i in insets:
+            i.downsize(rescale)
             cv2.imwrite(os.path.join(self.save_path, 'image_space_attack', f'{prefix}_{i.name}.png'), img[i.rows(), i.cols()])
 
 
