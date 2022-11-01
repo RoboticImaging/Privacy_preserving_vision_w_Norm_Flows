@@ -2,7 +2,7 @@
 Adam Taras 2022
 Work done under Donald G. Dansereau as part of the Robotic Imaging Group, The University of Sydney
 
-This is a git repo for source code for the second half, with an aim of quantifying the privacy of our proposed methods. 
+This is a git repo for source code for the second half of my thesis, with an aim of quantifying the privacy of our proposed methods. 
 
 ### Requirements
 
