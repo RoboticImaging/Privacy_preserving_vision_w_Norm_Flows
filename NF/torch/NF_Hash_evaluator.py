@@ -1,13 +1,33 @@
 
+
 from NFEvaluator import NFEvaluator
-import torchvision
-from torchvision import transforms
-import torch
-from train import discretize
-import numpy as np
+
+
+class NFHashEvaluator:
+    def __init__(self, hasher, n_pix, model_name, train_loader, 
+                    ckpt_pth = 'saved_models/bedroom_flows/', 
+                    save_pth='outputs'):
+        # load the model 
+        self.n_pix = n_pix
+        self.hasher = hasher
+        ckpt_pth = os.path.join(ckpt_pth, f'{n_pix}x{n_pix}')
+        self.model_params = NFEvaluator.get_model_dict(model_name)
+        self.model = self._read_model(model_name, ckpt_pth, n_pix)
+        
+        # setup figure saving path
+        self.output_save_path = os.path.join(save_pth, f'{n_pix}x{n_pix}', model_name)
+        if not os.path.exists(self.output_save_path):
+            os.mkdir(self.output_save_path)
+
+        # get example images
+        self.train_loader = train_loader
+        self.exmp_imgs, _ = next(iter(train_loader))
+
+
 
 
 if __name__ == "__main__":
+    
     n_pix = 64
     DATASET_PATH = f"data/LSUN_Bedroom/{n_pix}x{n_pix}"
 
@@ -38,12 +58,4 @@ if __name__ == "__main__":
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=256, shuffle=False, drop_last=False)
  
-    eval = NFEvaluator(n_pix, model_name, train_loader)
-    # eval.standard_interp()
-    # eval.show_random_samples()
-    # eval.interp_inside_out()
-    # eval.interp_inside_out_rand_dir()
-    # eval.interp_inside_out_zoomed()
-    # eval.interp_inside_out_rand_dir_zoomed()
-    # eval.hist_of_training_imgs()
-    eval.dist_of_noise_and_inverted()
+    eval = NFHashEvaluator(n_pix, model_name, train_loader)

@@ -182,7 +182,7 @@ class NFEvaluator:
         if save:
             plt.savefig(os.path.join(self.output_save_path, f"training_hist.png"))
 
-    def dist_of_noise_and_inverted(self, save=True, hundreds_of_imgs=50):
+    def dist_of_noise_and_inverted(self, save=True, hundreds_of_imgs=2):
         # see how far the inverted version of images are
         for i in range (hundreds_of_imgs):
             exmp_imgs, _ = next(iter(self.train_loader))
@@ -213,6 +213,16 @@ class NFEvaluator:
         # invert_dists = NFEvaluator._get_images_distance(z_inverted)
         # rand_dists = NFEvaluator._get_images_distance(z_rand)
 
+        plt.figure()
+        m = 3
+        n = 2
+        sample_imgs = torch.cat([imgs[m:m+n],NFEvaluator._invert_image(imgs[m:m+n]), torch.rand_like(imgs[m:m+n])*255])
+        self._show_imgs(sample_imgs.type(torch.int32))
+
+        if save:
+            plt.savefig(os.path.join(self.output_save_path, f"hist_imgs.png"))
+
+
         fig = plt.figure()
         ax = fig.add_subplot(111)
         fig.patch.set_facecolor('w')
@@ -223,9 +233,9 @@ class NFEvaluator:
         plt.legend()
         plt.ylabel('Count')
         plt.xlabel('Distance from origin')
-        if save:
-            plt.savefig(os.path.join(self.output_save_path, f"hist.png"))
-            plt.savefig(os.path.join(self.output_save_path, f"hist.svg"))
+        # if save:
+            # plt.savefig(os.path.join(self.output_save_path, f"hist.png"))
+            # plt.savefig(os.path.join(self.output_save_path, f"hist.svg"))
 
     
     def _invert_image(imgs):
