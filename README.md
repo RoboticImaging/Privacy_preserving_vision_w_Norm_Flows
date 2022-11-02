@@ -6,8 +6,15 @@ This is a git repo for source code for the second half of my thesis, with an aim
 
 ### Requirements
 
-- Python 3.9
-- TODO
+Python 3.9
+
+matplotlib==3.5.3
+numpy==1.23.2
+opencv_python==4.6.0.66
+pytorch_lightning==1.7.7
+scipy==1.9.0
+seaborn==0.12.1
+torchvision==0.13.1+cu113
 
 
 ### Structure
