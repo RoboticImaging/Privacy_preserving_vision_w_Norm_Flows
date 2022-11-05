@@ -31,6 +31,6 @@ The folders for this project are:
 
 ### Pre trained models
 
-Pre-trained models can be found [here FILL LINK](https://drive.google.com/)
+Pre-trained models can be found [here](https://drive.google.com/file/d/1pfLjzSLIvJj8NA_1KXAn1-7D7-uXx7HV/view?usp=share_link)
 
 
